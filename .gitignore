@@ -1,1 +1,3 @@
 .terraform
+deployer-key
+*.tfstate*
