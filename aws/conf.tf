@@ -4,6 +4,22 @@ provider "aws" {
   version = "~> 1.17"
 }
 
+resource "aws_security_group" "allow_outbound" {
+  name        = "allow_all_outbound"
+  description = "Allow all outbound"
+
+  egress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags {
+    Name = "allow_all_outbound"
+  }
+}
+
 resource "aws_security_group" "allow_web" {
   name        = "allow_web"
   description = "Allow web"
@@ -16,7 +32,7 @@ resource "aws_security_group" "allow_web" {
   }
 
   tags {
-    Name = "allow_all"
+    Name = "allow_web"
   }
 }
 
@@ -32,7 +48,7 @@ resource "aws_security_group" "allow_web8080" {
   }
 
   tags {
-    Name = "allow_all"
+    Name = "allow_web8080"
   }
 }
 
@@ -48,7 +64,7 @@ resource "aws_security_group" "allow_ssh" {
   }
 
   tags {
-    Name = "allow_all"
+    Name = "allow_ssh"
   }
 }
 
@@ -61,20 +77,24 @@ resource "aws_instance" "jenkins" {
   ami           = "ami-6b8cef13"
   instance_type = "t2.nano"
   key_name = "${aws_key_pair.deployer.key_name}"
-  security_groups = ["${aws_security_group.allow_ssh.name}","${aws_security_group.allow_web8080.name}"]
+  security_groups = ["${aws_security_group.allow_ssh.name}","${aws_security_group.allow_web8080.name}","${aws_security_group.allow_outbound.name}"]
+  tags {
+    Name = "Jenkins"
+  }
 }
 
 variable "env" {
   description = "Environments to Initialize"
   type = "list"
-  default = ["produccion", "integracion"]
+  default = ["Production", "Integration"]
 }
 
 resource "aws_instance" "server" {
   ami           = "ami-6b8cef13"
   instance_type = "t2.nano"
+  key_name = "${aws_key_pair.deployer.key_name}"
   count = 2
-  security_groups = ["${aws_security_group.allow_ssh.name}","${aws_security_group.allow_web.name}"]
+  security_groups = ["${aws_security_group.allow_ssh.name}","${aws_security_group.allow_web.name}","${aws_security_group.allow_outbound.name}"]
   tags {
     Name = "${element(var.env,count.index)}-server"
   }
