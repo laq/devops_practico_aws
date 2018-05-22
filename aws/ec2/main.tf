@@ -79,6 +79,10 @@ resource "aws_instance" "bastion" {
   }
 }
 
+data "template_file" "init" {
+  template = "${file("${path.module}/init.tpl")}"
+}
+
 resource "aws_instance" "server" {
   ami                    = "ami-b5ed9ccd"
   subnet_id              = "${element(var.priv_subnet_ids,count.index)}"
@@ -89,7 +93,7 @@ resource "aws_instance" "server" {
   tags {
     Name = "${element(var.env,count.index)}-server"
   }
-  user_data = "touch a; apt-get -y update && apt-get -y install nginx\n"
+  user_data = "${data.template_file.init.rendered}"
 }
 
 
@@ -114,9 +118,4 @@ resource "aws_elb" "server_loadbalancer" {
   }
   instances             = ["${aws_instance.server.*.id}"]
 }
-
-output "load_balancer_dns" {
-  value = "${var.server_loadbalancer.dns_name}"
-}
-
 

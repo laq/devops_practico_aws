@@ -4,6 +4,10 @@ provider "aws" {
   version = "~> 1.17"
 }
 
+provider "template" {
+  version = "~> 1.0"
+}
+
 module "vpc" {
   source            = "vpc"
   vpc_cidr          = "${var.vpc_cidr}"
