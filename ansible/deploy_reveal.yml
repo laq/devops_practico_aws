@@ -1,0 +1,34 @@
+
+- hosts: server
+  become: yes
+  tasks:
+
+    - name: Ensure there is nothing
+      file: 
+        path: '/var/www/html' 
+        state: absent
+
+    - name: Ensure html folder exists
+      file: 
+        path: '/var/www/html' 
+        state: directory  
+
+    - name: Download binary to deploy      
+      get_url:
+        url: https://github.com/damontic/ansible_jenkins_lab/archive/master.zip
+        dest: /tmp/master.zip
+        force: yes
+
+    - name: Unzip binary
+      unarchive:
+        src: /tmp/master.zip
+        dest: /var/www/html
+        remote_src : yes
+
+    - name: Rename folder
+      command: mv /var/www/html/ansible_jenkins_lab-master /var/www/html/master
+
+    - name: Ensure zip is gone
+      file: 
+        path: '/tmp/master.zip' 
+        state: absent

@@ -1,0 +1,12 @@
+- hosts: cicd
+  vars:
+    jenkins_url: http://10.0.0.4:8080
+    
+  tasks:
+
+    - name: "Ensure Jenkins is up"
+      uri:
+          url: "{{jenkins_url}}/job/deploy/build?token=q7v0j9sp2a9z756c"
+          status_code: 200
+      register: result
+      until: result.status == 200

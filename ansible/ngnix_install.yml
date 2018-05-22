@@ -1,0 +1,11 @@
+
+- hosts: server
+  tasks:
+
+  - name: Ensure Ngnix is installed
+    become: yes
+    apt: pkg=nginx state=present
+
+  - name: Ensure unzip is installed(for deploy)
+    become: yes
+    apt: pkg=unzip state=present

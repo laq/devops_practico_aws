@@ -1,0 +1,85 @@
+- hosts: cicd
+  vars:
+    jenkins_user: admin
+    jenkins_password: admin
+    jenkins_url: http://10.0.0.4:8080
+    ansible_python_interpreter: python2
+    server_private_key: ../vagrant/.vagrant/machines/server/virtualbox/private_key
+
+  tasks:
+
+  - name: Ensure ansible plugin is installed in jenkins
+    jenkins_plugin:
+      name: ansible
+      url: "{{jenkins_url}}"
+      url_username: "{{jenkins_user}}"
+      url_password: "{{jenkins_password}}"
+
+  - name: Ensure git plugin is installed in jenkins
+    jenkins_plugin:
+      name: git
+      url: "{{jenkins_url}}"
+      url_username: "{{jenkins_user}}"
+      url_password: "{{jenkins_password}}"
+
+  - name: Ensure ansicolor plugin is installed in jenkins
+    jenkins_plugin:
+      name: ansicolor
+      url: "{{jenkins_url}}"
+      url_username: "{{jenkins_user}}"
+      url_password: "{{jenkins_password}}"
+      
+  - name: Restart Jenkins to make the plugin data available
+    become: yes
+    service: name=jenkins state=restarted
+
+
+  - name: Creates .ssh directory for jenkins user
+    become: yes
+    file: 
+      state: directory
+      path: /var/lib/jenkins/.ssh
+      owner: jenkins
+      group: jenkins      
+      mode: 0700
+
+  - name: Ensure Server key is on .ssh/
+    become: yes
+    copy:
+      src: "{{server_private_key}}"
+      dest: /var/lib/jenkins/.ssh/id_rsa
+      owner: jenkins
+      group: jenkins
+      mode: 0400
+
+  - name: "Ensure Jenkins is up"
+    uri:
+      url: "{{jenkins_url}}/login"
+      status_code: 200
+    register: result
+    until: result.status == 200
+    retries: 60
+    delay: 1
+
+  - name: Ensure python-jenkins is installed
+    pip:
+      name: python-jenkins
+
+  - name: Ensure lxml is installed
+    pip:
+      name: lxml
+
+  - name: Write the new ec2 instance host key to known hosts
+    connection: local
+    shell: "ssh-keyscan -H {{ inventory_hostname }} >> ~/.ssh/known_hosts"
+
+  - name: Ensure Jenkins job is created    
+    jenkins_job:
+      name: deploy
+      url: "{{jenkins_url}}"
+      user: "{{jenkins_user}}"
+      password: "{{jenkins_password}}"
+      config: "{{ lookup('file', 'templates/deploy.xml') }}"
+
+
+

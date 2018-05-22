@@ -2,4 +2,6 @@
 deployer-key
 .idea/
 plan*
+.vagrant
+vagrant/*.log
 
