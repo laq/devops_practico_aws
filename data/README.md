@@ -1,6 +1,4 @@
-# Proyecto de Data
+# Ejemplos de herramientas de migración de datos
 
-## Ejemplo de Flyway
-
-1) Instalar Flyway
-2) Instalar SqlLite3
+- Flyway
+- Liquibase
